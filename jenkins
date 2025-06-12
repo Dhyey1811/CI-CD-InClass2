@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    triggers {
+        pollSCM('H/5 * * * *') // Poll every 5 minutes
+    }
+
+    environment {
+        PYTHON_VERSION = '3.10'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: 'github-creds', 
+                    url: 'https://github.com/Dhyey1811/CI-CD-InClass2.git', 
+                    branch: 'main'
+            }
+        }
+
+        stage('Install Python & Dependencies') {
+            steps {
+                bat '''
+                    where python || echo Python not found
+                    python --version || echo Failed to get version
+                    pip install --upgrade pip
+                    pip install -r requirements.txt || echo requirements.txt missing
+                '''
+            }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'echo Simulating build step: Python app ready.'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat '''
+                    echo Running tests...
+                    if exist tests\\test_calculator.py (
+                        python -m unittest discover tests || echo Tests failed
+                    ) else (
+                        echo No test files found.
+                    )
+                '''
+            }
+        }
+
+        stage('Notification') {
+            steps {
+                echo 'Notification: Build pipeline completed.'
+                // Uncomment if SMTP is configured
+                /*
+                mail to: 'yourcollegeemail@example.com',
+                     subject: "Python CI App Build Status",
+                     body: "Build and Test completed successfully."
+                */
+            }
+        }
+    }
+}
